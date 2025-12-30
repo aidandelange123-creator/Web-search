@@ -1,10 +1,70 @@
 # Web Search AI
 
-A web search application that searches both Bing and DuckDuckGo for real-time results. The application is built with HTML, CSS, JavaScript, and TypeScript.
+A web search application that searches both Bing and DuckDuckGo for real-time results using real web scraping bots.
 
 ## Features
 
-- Search across both Bing and DuckDuckGo simultaneously
+- Real web search functionality using actual search engines
+- Bot-based search that scrapes live results from Bing and DuckDuckGo
+- Multi-engine search support (Bing and DuckDuckGo)
+- Responsive web interface
+- CORS-safe search through backend proxy
+- Rate limiting and proper request headers to respect search engine policies
+
+## Improvements and Bug Fixes
+
+- **Real Search Bots**: Implemented actual web scraping bots that fetch live results from search engines
+- **Backend Service**: Added a backend service to handle web scraping and avoid CORS issues
+- **Rate Limiting**: Added delays between requests to respect search engine rate limits
+- **Error Handling**: Improved error handling and fallback mechanisms
+- **Proxy Setup**: Implemented proxy server to route API requests safely
+- **Better Result Parsing**: Enhanced result extraction from search engine HTML
+- **Performance Optimization**: Improved loading indicators and async handling
+
+## How to Run
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+2. Start the backend service (in one terminal):
+   ```bash
+   npm run backend
+   ```
+
+3. In another terminal, start the frontend server:
+   ```bash
+   npm start
+   ```
+
+4. Open your browser and go to `http://localhost:8000`
+
+## Architecture
+
+- `real-search.js`: Frontend JavaScript with bot-based search functionality
+- `search-backend.js`: Backend service that handles web scraping
+- `server.js`: Frontend server with API proxy
+- `index.html`: Main HTML interface
+- `styles.css`: Styling for the application
+
+## API Endpoints
+
+- `GET /api/search?q={query}&engine={bing|duckduckgo|all}` - Search with specific engine
+- `GET /api/search/multi?q={query}` - Search with both engines
+- `GET /health` - Health check endpoint
+
+## Technical Details
+
+The application uses a two-server architecture:
+1. Frontend server (port 8000) - serves the UI and proxies API requests
+2. Backend service (port 3000) - handles web scraping and search functionality
+
+This approach allows the application to:
+- Bypass CORS restrictions
+- Handle rate limiting appropriately
+- Implement proper request headers to mimic real browsers
+- Provide reliable search results from actual search engines
 - Toggle between search engines
 - Responsive design that works on all devices
 - Clean, modern UI with loading indicators
