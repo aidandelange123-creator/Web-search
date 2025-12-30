@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Search AI</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Web Search AI</h1>
+            <p>Search across Bing and DuckDuckGo for real-time results</p>
+        </header>
+        
+        <main>
+            <div class="search-container">
+                <form id="search-form">
+                    <div class="search-input-container">
+                        <input type="text" id="search-query" placeholder="Enter your search query..." autocomplete="off" />
+                        <button type="submit" id="search-button">Search</button>
+                    </div>
+                    <div class="search-options">
+                        <label>
+                            <input type="checkbox" id="search-bing" checked> Bing
+                        </label>
+                        <label>
+                            <input type="checkbox" id="search-duckduckgo" checked> DuckDuckGo
+                        </label>
+                    </div>
+                </form>
+            </div>
+            
+            <div id="loading" class="loading hidden">
+                <div class="spinner"></div>
+                <p>Searching...</p>
+            </div>
+            
+            <div id="results-container" class="results-container">
+                <!-- Results will be displayed here -->
+            </div>
+        </main>
+    </div>
+    
+    <script src="real-search.js"></script>
+</body>
+</html>
