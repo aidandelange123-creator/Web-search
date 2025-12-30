@@ -1,0 +1,25 @@
+{
+  "name": "web-search-ai",
+  "version": "1.0.0",
+  "description": "A web search application that searches both Bing and DuckDuckGo for real-time results",
+  "main": "script.js",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "dev": "python3 -m http.server 8000",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "search",
+    "bing",
+    "duckduckgo",
+    "web",
+    "search-engine",
+    "typescript"
+  ],
+  "author": "Web Search AI",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}
