@@ -1,14 +1,21 @@
-// Development server with proxy for API requests
+// Optimized development server with proxy for API requests
 const express = require('express');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const path = require('path');
+const compression = require('compression');
 
 const app = express();
 const PORT = 8000;
 const BACKEND_PORT = 3000;
 
-// Serve static files from the current directory
-app.use(express.static(path.join(__dirname)));
+// Enable compression to reduce payload size for slow connections
+app.use(compression());
+
+// Serve static files from the current directory with cache optimization
+app.use(express.static(path.join(__dirname), {
+  maxAge: '1d', // Cache static assets for 1 day
+  etag: true, // Enable ETag caching
+}));
 
 // Proxy API requests to the backend service
 app.use('/api', createProxyMiddleware({
