@@ -13,7 +13,7 @@ body {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
@@ -115,10 +115,85 @@ header p {
     to { transform: rotate(360deg); }
 }
 
+.results-history-container {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 30px;
+}
+
 .results-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 20px;
+}
+
+.search-history {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+}
+
+.history-controls {
+    margin-bottom: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.clear-history-btn {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.clear-history-btn:hover {
+    background-color: #c0392b;
+}
+
+.history-title {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+
+.history-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-item a {
+    color: #3498db;
+    text-decoration: none;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 10px;
+}
+
+.history-item a:hover {
+    text-decoration: underline;
+}
+
+.history-timestamp {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    white-space: nowrap;
 }
 
 .search-engine-results {
@@ -142,6 +217,10 @@ header p {
 
 .duckduckgo-header {
     color: #de5833;
+}
+
+.google-header {
+    color: #4285f4;
 }
 
 .search-engine-title {
@@ -195,7 +274,24 @@ header p {
     font-style: italic;
 }
 
+.no-history {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
 /* Reduced media queries for smaller CSS payload */
+@media (max-width: 992px) {
+    .results-history-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .search-history {
+        position: static;
+    }
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 10px;

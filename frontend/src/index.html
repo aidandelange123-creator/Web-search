@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Search AI</title>
-    <link rel="stylesheet" href="optimized-styles.css">
+    <link rel="stylesheet" href="styles.css">
     <!-- Preload critical resources -->
-    <link rel="preload" href="optimized-styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
-    <noscript><link rel="stylesheet" href="optimized-styles.css"></noscript>
+    <link rel="preload" href="styles.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="styles.css"></noscript>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Web Search AI</h1>
-            <p>Search across Bing and DuckDuckGo for real-time results</p>
+            <p>Search across Bing, Google and DuckDuckGo for real-time results</p>
         </header>
         
         <main>
@@ -30,6 +30,9 @@
                         <label>
                             <input type="checkbox" id="search-duckduckgo" checked> DuckDuckGo
                         </label>
+                        <label>
+                            <input type="checkbox" id="search-google" checked> Google
+                        </label>
                     </div>
                 </form>
             </div>
@@ -39,13 +42,22 @@
                 <p>Searching...</p>
             </div>
             
-            <div id="results-container" class="results-container">
-                <!-- Results will be displayed here -->
+            <div class="results-history-container">
+                <div id="results-container" class="results-container">
+                    <!-- Results will be displayed here -->
+                </div>
+                
+                <div id="search-history" class="search-history">
+                    <!-- Search history will be displayed here -->
+                    <div class="history-controls">
+                        <button id="clear-history" class="clear-history-btn">Clear History</button>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
     
     <!-- Optimized script with async loading for faster performance -->
-    <script src="optimized-search.js" defer></script>
+    <script src="script.js" defer></script>
 </body>
 </html>

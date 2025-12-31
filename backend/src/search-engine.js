@@ -1,4 +1,4 @@
-// Optimized backend service for real web search with bot functionality
+// Enhanced backend service for real web search with bot functionality
 // This service handles web scraping and search functionality server-side
 // to avoid CORS issues and handle rate limiting with optimizations for slow connections
 
@@ -7,13 +7,60 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
 const compression = require('compression');
+const helmet = require('helmet');
+const rateLimit = require('rate-limiter-flexible');
+const winston = require('winston');
+const moment = require('moment');
+const config = require('./config');
+
+// Initialize logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'search-backend' },
+  transports: [
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    }),
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' })
+  ]
+});
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = config.port;
 
-// Enable CORS for all routes
+// Security middleware
+app.use(helmet());
 app.use(cors());
 app.use(express.json());
+
+// Rate limiting
+const opts = {
+  points: config.rateLimit.points, // Number of points
+  duration: config.rateLimit.duration, // Per duration seconds
+};
+const limiter = new rateLimit.RateLimiterMemory(opts);
+
+const rateLimiterMiddleware = (req, res, next) => {
+  limiter.consume(req.ip)
+    .then(() => {
+      next();
+    })
+    .catch(() => {
+      res.status(429).send('Too Many Requests');
+    });
+};
+
+app.use(rateLimiterMiddleware);
 
 // Enable compression to reduce payload size for slow connections
 app.use(compression());
@@ -72,9 +119,10 @@ async function scrapeBing(query) {
       }
     });
 
+    logger.info(`Bing search for "${query}" returned ${results.length} results`);
     return results;
   } catch (error) {
-    console.error('Error scraping Bing:', error.message);
+    logger.error(`Error scraping Bing: ${error.message}`);
     return [];
   }
 }
@@ -116,17 +164,62 @@ async function scrapeDuckDuckGo(query) {
       }
     });
 
+    logger.info(`DuckDuckGo search for "${query}" returned ${results.length} results`);
     return results;
   } catch (error) {
-    console.error('Error scraping DuckDuckGo:', error.message);
+    logger.error(`Error scraping DuckDuckGo: ${error.message}`);
+    return [];
+  }
+}
+
+// Function to scrape Google search results (additional feature)
+async function scrapeGoogle(query) {
+  try {
+    const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+    
+    await delay(Math.random() * 1500 + 1000); // Slightly longer delay for Google to avoid blocking
+    
+    const response = await axios.get(url, {
+      ...axiosConfig,
+      timeout: 10000
+    });
+
+    const $ = cheerio.load(response.data);
+    const results = [];
+
+    // Extract search results from Google
+    $('div.g').each((index, element) => {
+      if (results.length >= 8) return false; // Limit results
+      
+      const titleElement = $(element).find('h3');
+      const urlElement = $(element).find('a');
+      const snippetElement = $(element).find('.VwiC3b, .s3v9rd');
+
+      const title = titleElement.text().trim();
+      const url = urlElement.attr('href') || '';
+      const snippet = snippetElement.text().trim();
+
+      if (title && url) {
+        results.push({
+          title: title.substring(0, 120),
+          url: url.substring(0, 500),
+          snippet: snippet.substring(0, 200) || 'No description available'
+        });
+      }
+    });
+
+    logger.info(`Google search for "${query}" returned ${results.length} results`);
+    return results;
+  } catch (error) {
+    logger.error(`Error scraping Google: ${error.message}`);
     return [];
   }
 }
 
 // API endpoint for search with optimizations for slow connections
-app.get('/api/search', async (req, res) => {
+app.get('/search', async (req, res) => {
   try {
-    const { query, engine } = req.query;
+    const { q: query, engine } = req.query;
     
     if (!query) {
       return res.status(400).json({ error: 'Query parameter is required' });
@@ -139,39 +232,43 @@ app.get('/api/search', async (req, res) => {
       setTimeout(() => reject(new Error('Request timeout')), 15000)
     );
 
-    if (engine === 'bing' || engine === 'all') {
-      // Use Promise.race to prevent hanging requests
+    if (engine === 'bing') {
       results = await Promise.race([scrapeBing(query), timeoutPromise]);
     } else if (engine === 'duckduckgo') {
       results = await Promise.race([scrapeDuckDuckGo(query), timeoutPromise]);
+    } else if (engine === 'google') {
+      results = await Promise.race([scrapeGoogle(query), timeoutPromise]);
     } else {
-      // Default to both if no specific engine is requested
+      // Default to all engines if no specific engine is requested
       // Use optimized parallel execution with timeout
       const bingPromise = Promise.race([scrapeBing(query), timeoutPromise]);
       const duckduckgoPromise = Promise.race([scrapeDuckDuckGo(query), timeoutPromise]);
+      const googlePromise = Promise.race([scrapeGoogle(query), timeoutPromise]);
       
-      const [bingResults, duckduckgoResults] = await Promise.allSettled([
+      const [bingResults, duckduckgoResults, googleResults] = await Promise.allSettled([
         bingPromise,
-        duckduckgoPromise
+        duckduckgoPromise,
+        googlePromise
       ]);
       
       results = {
         bing: bingResults.status === 'fulfilled' ? bingResults.value : [],
-        duckduckgo: duckduckgoResults.status === 'fulfilled' ? duckduckgoResults.value : []
+        duckduckgo: duckduckgoResults.status === 'fulfilled' ? duckduckgoResults.value : [],
+        google: googleResults.status === 'fulfilled' ? googleResults.value : []
       };
     }
 
     res.json({ query, results, timestamp: new Date().toISOString() });
   } catch (error) {
-    console.error('Search error:', error.message);
+    logger.error(`Search error: ${error.message}`);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // API endpoint for multiple engines with optimizations for slow connections
-app.get('/api/search/multi', async (req, res) => {
+app.get('/search/multi', async (req, res) => {
   try {
-    const { query } = req.query;
+    const { q: query } = req.query;
     
     if (!query) {
       return res.status(400).json({ error: 'Query parameter is required' });
@@ -182,41 +279,83 @@ app.get('/api/search/multi', async (req, res) => {
       setTimeout(() => reject(new Error('Request timeout')), 15000)
     );
 
-    // Run both searches in parallel with timeout protection
+    // Run searches in parallel with timeout protection
     const bingPromise = Promise.race([scrapeBing(query), timeoutPromise]);
     const duckduckgoPromise = Promise.race([scrapeDuckDuckGo(query), timeoutPromise]);
+    const googlePromise = Promise.race([scrapeGoogle(query), timeoutPromise]);
     
-    const [bingResults, duckduckgoResults] = await Promise.allSettled([
+    const [bingResults, duckduckgoResults, googleResults] = await Promise.allSettled([
       bingPromise,
-      duckduckgoPromise
+      duckduckgoPromise,
+      googlePromise
     ]);
 
     res.json({ 
       query, 
       results: {
         bing: bingResults.status === 'fulfilled' ? bingResults.value : [],
-        duckduckgo: duckduckgoResults.status === 'fulfilled' ? duckduckgoResults.value : []
+        duckduckgo: duckduckgoResults.status === 'fulfilled' ? duckduckgoResults.value : [],
+        google: googleResults.status === 'fulfilled' ? googleResults.value : []
       },
       timestamp: new Date().toISOString() 
     });
   } catch (error) {
-    console.error('Multi-search error:', error.message);
+    logger.error(`Multi-search error: ${error.message}`);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
 // Health check endpoint
 app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({ 
+    status: 'OK', 
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    version: '2.0.0'
+  });
+});
+
+// History endpoint - new feature to track search history
+const searchHistory = [];
+
+app.post('/history', (req, res) => {
+  const { query, results, engine } = req.body;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Query is required' });
+  }
+  
+  const historyEntry = {
+    id: Date.now().toString(),
+    query,
+    engine: engine || 'all',
+    resultsCount: results ? (Array.isArray(results) ? results.length : Object.values(results).reduce((acc, val) => acc + (Array.isArray(val) ? val.length : 0), 0)) : 0,
+    timestamp: new Date().toISOString()
+  };
+  
+  searchHistory.unshift(historyEntry); // Add to beginning of array
+  
+  // Keep only last 100 searches
+  if (searchHistory.length > 100) {
+    searchHistory.pop();
+  }
+  
+  res.status(201).json({ message: 'History saved', id: historyEntry.id });
+});
+
+app.get('/history', (req, res) => {
+  res.json({ history: searchHistory });
 });
 
 // Start the server
 app.listen(PORT, () => {
-  console.log(`Search backend server is running on port ${PORT}`);
-  console.log(`API endpoints:`);
-  console.log(`  GET /api/search?q={query}&engine={bing|duckduckgo|all}`);
-  console.log(`  GET /api/search/multi?q={query}`);
-  console.log(`  GET /health`);
+  logger.info(`Search backend server is running on port ${PORT}`);
+  logger.info(`API endpoints:`);
+  logger.info(`  GET /search?q={query}&engine={bing|duckduckgo|google|all}`);
+  logger.info(`  GET /search/multi?q={query}`);
+  logger.info(`  GET /health`);
+  logger.info(`  POST /history`);
+  logger.info(`  GET /history`);
 });
 
 module.exports = app;
