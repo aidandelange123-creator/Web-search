@@ -9,6 +9,9 @@ const rateLimit = require('rate-limiter-flexible');
 const winston = require('winston');
 const config = require('./config');
 
+// Import our security system
+const securitySystem = require('../../security');
+
 // Initialize logger
 const logger = winston.createLogger({
   level: 'info',
@@ -34,6 +37,9 @@ const logger = winston.createLogger({
 const app = express();
 const PORT = config.frontendPort;
 const BACKEND_PORT = config.backendPort;
+
+// Apply our multi-layer security system
+app.use(securitySystem.getMiddleware());
 
 // Security middleware
 app.use(helmet());
