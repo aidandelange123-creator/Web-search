@@ -1,5 +1,5 @@
 // Security Implementation Script
-// This script demonstrates how to integrate the multi-layer security system into an application
+// This script demonstrates how to integrate the multi-layer security system with advanced bot protection into an application
 
 const express = require('express');
 const securitySystem = require('./security');
@@ -11,12 +11,12 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Apply the security system to the application
+// Apply the security system to the application (includes bot protection)
 securitySystem.setup(app);
 
 // Example secure route
 app.get('/', (req, res) => {
-    res.send('<h1>Secure Application</h1><p>Your request has been processed through our multi-layer security system.</p>');
+    res.send('<h1>Secure Application with Bot Protection</h1><p>Your request has been processed through our multi-layer security system with advanced bot protection.</p>');
 });
 
 // Example route that handles user input securely
@@ -32,7 +32,7 @@ app.post('/user-data', (req, res) => {
         
         res.json({ 
             status: 'success', 
-            message: 'Data received securely',
+            message: 'Data received securely', 
             receivedData: userData
         });
     } catch (error) {
@@ -63,7 +63,8 @@ app.post('/lockdown', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Secure application running on port ${PORT}`);
-    console.log('Multi-layer security system is active and protecting this application');
+    console.log('Multi-layer security system with advanced bot protection is active and protecting this application');
+    console.log('Hidden security bots are monitoring for threats...');
 });
 
 // Export the app in case it's used in another module
