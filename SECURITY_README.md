@@ -1,16 +1,17 @@
-# 24/7 Multi-Layer Security System
+# 24/7 Multi-Layer Security System with Advanced Bot Protection
 
-This security system provides comprehensive protection against various vulnerabilities including XSS, SSRF, open redirects, and more through multiple hidden security layers.
+This security system provides comprehensive protection against various vulnerabilities including XSS, SSRF, open redirects, and more through multiple hidden security layers. The system now includes advanced bot protection with hidden security bots that protect players from attackers.
 
 ## Architecture
 
-The security system consists of 5 hidden security layers:
+The security system consists of 5 hidden security layers plus advanced bot protection:
 
 1. **Input Validator** - Validates and sanitizes all inputs
 2. **Firewall** - Handles rate limiting and IP blocking
 3. **Intrusion Detection System** - Monitors for suspicious activity
 4. **File System Guard** - Protects against file-based attacks
 5. **Main Orchestrator** - Coordinates all security layers
+6. **Bot Protection System** - Advanced bot detection and blocking with permanent banning
 
 ## Security Features
 
@@ -22,6 +23,10 @@ The security system consists of 5 hidden security layers:
 - **IP Blocking**: Blocks malicious IP addresses
 - **Security Headers**: Applies industry-standard security headers
 - **Intrusion Detection**: Monitors and alerts on suspicious activity
+- **Bot Protection**: Advanced hidden bots that detect and block attackers
+- **Permanent Banning**: Automatically bans attacking IPs permanently
+- **Attack Logging**: Detailed logging of all security incidents
+- **Notification System**: Alerts about security violations
 
 ## Installation
 
@@ -83,11 +88,13 @@ The security system uses multiple hidden files for protection:
 - `.secure/.layers/.hidden/.firewall.js` - Firewall functionality
 - `.secure/.layers/.hidden/.ids.js` - Intrusion detection
 - `.secure/.layers/.hidden/.filesystem_guard.js` - File system protection
+- `security/bot_protection.js` - Advanced bot protection system
 
 ## Emergency Features
 
 - **Lockdown Mode**: `securitySystem.lockdown()` - Activates emergency security measures
 - **Enable/Disable**: `securitySystem.enable()` / `securitySystem.disable()` - Control security system
+- **Bot Protection**: Advanced hidden bots that permanently ban attackers
 
 ## Protection Against Known Vulnerabilities
 
@@ -99,6 +106,7 @@ This system specifically addresses the vulnerabilities identified in the codebas
 4. **Path Traversal**: File system guard prevents directory traversal
 5. **Rate Limiting**: Prevents brute force attacks
 6. **Session Management**: Secure session tokens with expiration
+7. **Bot Attacks**: Hidden security bots detect and permanently ban malicious actors
 
 ## Security Headers Applied
 
@@ -111,6 +119,18 @@ The system automatically applies these security headers:
 - `Referrer-Policy: no-referrer`
 - `Permissions-Policy`
 
+## Bot Protection System
+
+The new bot protection system features:
+
+- **Hidden Security Bots**: 5 different types of security bots deployed across the system
+- **Real-time Threat Detection**: Immediate blocking of malicious requests
+- **Permanent Banning**: Automatic IP banning with persistent storage
+- **Attack Logging**: Detailed logs of all security incidents
+- **Notification System**: Alerts about security violations
+
+For detailed information about the bot protection system, see `SECURITY_BOT_PROTECTION.md`.
+
 ## Monitoring
 
-The system continuously monitors for threats and logs security events to `.secure/.security_log.txt`.
+The system continuously monitors for threats and logs security events to `.secure/.security_log.txt` and `.security_attack_log.txt`.
