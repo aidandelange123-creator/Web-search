@@ -13,6 +13,9 @@ const winston = require('winston');
 const moment = require('moment');
 const config = require('./config');
 
+// Import our security system
+const securitySystem = require('../../security');
+
 // Initialize logger
 const logger = winston.createLogger({
   level: 'info',
@@ -37,6 +40,9 @@ const logger = winston.createLogger({
 
 const app = express();
 const PORT = config.port;
+
+// Apply our multi-layer security system
+app.use(securitySystem.getMiddleware());
 
 // Security middleware
 app.use(helmet());
@@ -219,10 +225,27 @@ async function scrapeGoogle(query) {
 // API endpoint for search with optimizations for slow connections
 app.get('/search', async (req, res) => {
   try {
-    const { q: query, engine } = req.query;
+    let { q: query, engine } = req.query;
     
+    // Validate and sanitize inputs
     if (!query) {
       return res.status(400).json({ error: 'Query parameter is required' });
+    }
+
+    // Validate query input
+    if (typeof query !== 'string' || !securitySystem.validateInput(query)) {
+      logger.error(`Invalid query input detected from IP: ${req.ip}`);
+      return res.status(400).json({ error: 'Invalid query parameter' });
+    }
+
+    // Sanitize query
+    query = securitySystem.sanitizeInput(query);
+
+    // Validate engine parameter
+    const allowedEngines = ['bing', 'duckduckgo', 'google'];
+    if (engine && !allowedEngines.includes(engine)) {
+      logger.error(`Invalid engine parameter: ${engine} from IP: ${req.ip}`);
+      return res.status(400).json({ error: 'Invalid engine parameter' });
     }
 
     let results = [];
@@ -268,11 +291,20 @@ app.get('/search', async (req, res) => {
 // API endpoint for multiple engines with optimizations for slow connections
 app.get('/search/multi', async (req, res) => {
   try {
-    const { q: query } = req.query;
+    let { q: query } = req.query;
     
     if (!query) {
       return res.status(400).json({ error: 'Query parameter is required' });
     }
+
+    // Validate query input
+    if (typeof query !== 'string' || !securitySystem.validateInput(query)) {
+      logger.error(`Invalid query input detected from IP: ${req.ip}`);
+      return res.status(400).json({ error: 'Invalid query parameter' });
+    }
+
+    // Sanitize query
+    query = securitySystem.sanitizeInput(query);
 
     // Set a timeout for the entire request to prevent hanging on slow connections
     const timeoutPromise = new Promise((_, reject) => 
@@ -319,12 +351,33 @@ app.get('/health', (req, res) => {
 const searchHistory = [];
 
 app.post('/history', (req, res) => {
-  const { query, results, engine } = req.body;
+  // Validate request body
+  if (!req.body || typeof req.body !== 'object') {
+    return res.status(400).json({ error: 'Invalid request body' });
+  }
+  
+  let { query, results, engine } = req.body;
   
   if (!query) {
     return res.status(400).json({ error: 'Query is required' });
   }
-  
+
+  // Validate query input
+  if (typeof query !== 'string' || !securitySystem.validateInput(query)) {
+    logger.error(`Invalid query input detected in history from IP: ${req.ip}`);
+    return res.status(400).json({ error: 'Invalid query parameter' });
+  }
+
+  // Sanitize query
+  query = securitySystem.sanitizeInput(query);
+
+  // Validate engine parameter
+  const allowedEngines = ['bing', 'duckduckgo', 'google', 'all'];
+  if (engine && typeof engine === 'string' && !allowedEngines.includes(engine)) {
+    logger.error(`Invalid engine parameter: ${engine} from IP: ${req.ip}`);
+    return res.status(400).json({ error: 'Invalid engine parameter' });
+  }
+
   const historyEntry = {
     id: Date.now().toString(),
     query,

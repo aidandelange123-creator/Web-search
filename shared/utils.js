@@ -1,9 +1,17 @@
 // Shared utilities for the Web Search AI project
 
+// Import our security system
+const securitySystem = require('../security');
+
 // Function to validate search query
 function validateQuery(query) {
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return { valid: false, error: 'Query is required and must be a non-empty string' };
+  }
+
+  // Additional security validation
+  if (!securitySystem.validateInput(query)) {
+    return { valid: false, error: 'Query contains invalid characters' };
   }
 
   if (query.trim().length > 255) {
